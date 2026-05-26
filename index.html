@@ -711,6 +711,71 @@ footer .tag { padding: 3px 10px; font-weight: 600; background: var(--white); bor
 footer .tag.lime { background: var(--lime); border-color: var(--lime); color: var(--black); }
 footer .tag.black { background: var(--black); color: var(--white); border-color: var(--black); }
 
+/* ── Hotspot card & list ── */
+.hotspot-card {
+  background: var(--white);
+  padding: 28px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+}
+.hotspot-row {
+  display: grid;
+  grid-template-columns: 32px 1fr auto;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 8px 12px 0;
+  border-bottom: 1px solid var(--grey-3);
+  cursor: pointer;
+  transition: background .12s;
+}
+.hotspot-row:hover { background: var(--grey-4); }
+.hotspot-row:last-child { border-bottom: none; }
+.hotspot-row .rank {
+  font-family: var(--font-en);
+  font-size: 22px;
+  font-weight: 300;
+  color: var(--grey-2);
+  text-align: right;
+  line-height: 1;
+}
+.hotspot-row.top1 .rank { color: var(--red); font-weight: 500; }
+.hotspot-row.top2 .rank,
+.hotspot-row.top3 .rank { color: var(--gold); }
+.hotspot-row .info { min-width: 0; }
+.hotspot-row .loc {
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--black);
+  line-height: 1.45;
+  margin-bottom: 4px;
+}
+.hotspot-row .meta {
+  font-family: var(--font-en);
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--grey-2);
+}
+.hotspot-row .meta .sep { color: var(--grey-3); margin: 0 6px; }
+.hotspot-row .deaths {
+  font-family: var(--font-en);
+  font-weight: 600;
+  font-size: 18px;
+  color: var(--black);
+  text-align: right;
+  line-height: 1;
+}
+.hotspot-row .deaths small {
+  font-size: 9px;
+  letter-spacing: 0.18em;
+  color: var(--grey-2);
+  font-weight: 500;
+  text-transform: uppercase;
+  display: block;
+  margin-top: 4px;
+}
+
+/* Heat layer canvas — let it sit below labels but above tiles */
+.leaflet-heatmap-layer { mix-blend-mode: multiply; }
+
 /* Leaflet marker overrides */
 .lf-marker {
   border-radius: 50%;
@@ -1009,6 +1074,12 @@ footer .tag.black { background: var(--black); color: var(--white); border-color:
       <span class="cat-pill" data-mode="人">行人</span>
       <span class="cat-pill" data-mode="慢車">自行車/慢車</span>
     </div>
+    <div class="filter-group">
+      <span class="filter-group-label">View</span>
+      <span class="cat-pill active" data-view="points">點位 Points</span>
+      <span class="cat-pill" data-view="heat">熱力 Heatmap</span>
+      <span class="cat-pill" data-view="both">兩者 Both</span>
+    </div>
     <div class="filter-group" style="margin-left:auto">
       <span class="filter-group-label" id="filterCount">Showing — / —</span>
     </div>
@@ -1038,6 +1109,18 @@ footer .tag.black { background: var(--black); color: var(--white); border-color:
   </div>
   <div style="font-family:var(--font-en);font-size:9px;letter-spacing:0.15em;color:var(--grey-2);text-transform:uppercase;margin-top:12px">
     Note · 2016 &amp; 2017 records lack coordinates and are excluded from the map; their counts remain in the trend &amp; breakdown sections.
+  </div>
+
+  <div class="hotspot-card" style="margin-top:24px">
+    <div style="display:flex;align-items:baseline;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:6px">
+      <h4 style="font-family:var(--font-en);font-size:10px;letter-spacing:0.22em;text-transform:uppercase;color:var(--grey-2);font-weight:600">Top Hotspots · 優先治理路段</h4>
+      <div style="font-family:var(--font-en);font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:var(--grey-3)">300m × 300m grid · click to zoom</div>
+    </div>
+    <div style="font-size:13px;color:var(--black);margin-bottom:18px;letter-spacing:0.05em">能解析道路名稱與里程者以「~3 公里路段」聚合（標記 ⚑ 路段）；其餘以 ~300 公尺方格聚合。依累計死亡人數排序前 10 名。點選列可在地圖上定位。</div>
+    <div id="hotspots"></div>
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--grey-3);font-family:var(--font-en);font-size:9px;letter-spacing:0.12em;color:var(--grey-2);line-height:1.7">
+      Note · A1 records sometimes share identical coordinates that represent road centroids rather than precise crash points. We collapse such events into road-segment clusters (km range shown) to avoid false single-point hotspots.
+    </div>
   </div>
 </div>
 
@@ -1143,6 +1226,7 @@ footer .tag.black { background: var(--black); color: var(--white); border-color:
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+<script src="https://unpkg.com/leaflet.heat@0.2.0/dist/leaflet-heat.js"></script>
 <script src="taitung_a1.js"></script>
 <script>
 (() => {
@@ -1161,7 +1245,7 @@ footer .tag.black { background: var(--black); color: var(--white); border-color:
   DATA.forEach((e, i) => { e._id = i; });
 
   // ---------- Filter state ----------
-  const state = { year: 'all', mode: 'all', selectedId: null };
+  const state = { year: 'all', mode: 'all', view: 'points', selectedId: null };
 
   function filteredAll() {
     return DATA.filter(e =>
@@ -1356,6 +1440,22 @@ footer .tag.black { background: var(--black); color: var(--white); border-color:
   const markerLayer = L.layerGroup().addTo(map);
   const markerById = new Map();
 
+  // Heat layer — VZT gradient: lime → gold → red. Weight by deaths.
+  const heatLayer = L.heatLayer([], {
+    radius: 26,
+    blur: 22,
+    maxZoom: 14,
+    minOpacity: 0.35,
+    max: 4,
+    gradient: {
+      0.0: 'rgba(200, 212, 0, 0)',
+      0.15: '#C8D400',
+      0.4:  '#E8F000',
+      0.65: '#E8A825',
+      1.0:  '#D94F3D',
+    },
+  });
+
   function makeMarker(ev) {
     const color = MODE_COLOR[ev.mode] || '#888';
     const radius = 6 + Math.min(ev.deaths - 1, 3) * 2;
@@ -1377,12 +1477,146 @@ footer .tag.black { background: var(--black); color: var(--white); border-color:
   }
 
   function renderMap() {
+    const events = filteredOnMap();
+
+    // --- Points layer ---
     markerLayer.clearLayers();
     markerById.clear();
-    filteredOnMap().forEach(ev => {
-      const m = makeMarker(ev);
-      m.addTo(markerLayer);
-      markerById.set(ev._id, m);
+    if (state.view === 'points' || state.view === 'both') {
+      events.forEach(ev => {
+        const m = makeMarker(ev);
+        m.addTo(markerLayer);
+        markerById.set(ev._id, m);
+      });
+    }
+
+    // --- Heat layer ---
+    if (state.view === 'heat' || state.view === 'both') {
+      const pts = events.map(ev => [ev.lat, ev.lon, ev.deaths || 1]);
+      heatLayer.setLatLngs(pts);
+      if (!map.hasLayer(heatLayer)) heatLayer.addTo(map);
+    } else if (map.hasLayer(heatLayer)) {
+      map.removeLayer(heatLayer);
+    }
+  }
+
+  // ====================================================================
+  //  HOTSPOT RANKING — road segment + grid clustering
+  // ====================================================================
+  // Many A1 records share identical coordinates that are road centroids
+  // rather than precise crash points. So we cluster by (road, ~3km segment)
+  // when a road name + km marker is present; otherwise fall back to a 300m
+  // spatial grid.
+  //
+  // Segment step: 3 km — small enough to be actionable, large enough to
+  // tolerate the published "公尺" precision noise.
+  const ROAD_RE = /(台\d+(?:乙|甲|丙)?線|縣道\d+|鄉道[\w\d]*|市區道路|產業道路)/;
+  const KM_RE   = /(\d+)\s*公里/;
+  const SEG_KM  = 3;
+  const SPATIAL_GRID = 0.003;
+
+  function clusterKey(ev) {
+    const roadM = ev.location.match(ROAD_RE);
+    const kmM = ev.location.match(KM_RE);
+    if (roadM && kmM) {
+      const seg = Math.floor(parseInt(kmM[1], 10) / SEG_KM);
+      return { kind: 'road', key: `${roadM[1]}#${seg}` };
+    }
+    // fall back to spatial bin
+    const lat = Math.round(ev.lat / SPATIAL_GRID);
+    const lon = Math.round(ev.lon / SPATIAL_GRID);
+    return { kind: 'grid', key: `g${lat}_${lon}` };
+  }
+
+  function computeHotspots(events, topN = 10) {
+    const bins = new Map();
+    events.forEach(e => {
+      const ck = clusterKey(e);
+      if (!bins.has(ck.key)) bins.set(ck.key, { kind: ck.kind, deaths: 0, events: 0, evs: [] });
+      const b = bins.get(ck.key);
+      b.deaths += e.deaths || 0;
+      b.events += 1;
+      b.evs.push(e);
+    });
+    return Array.from(bins.values())
+      .map(b => {
+        const lead = b.evs.slice().sort((a,c)=> (c.deaths-a.deaths) || a.date.localeCompare(c.date))[0];
+        const distCnt = {};
+        b.evs.forEach(e => { distCnt[e.district] = (distCnt[e.district]||0)+1; });
+        const districts = Object.entries(distCnt).sort((a,c)=>c[1]-a[1]).map(([d])=>d);
+        const yrs = Array.from(new Set(b.evs.map(e => e.year))).sort();
+        const yrRange = yrs.length === 1 ? `${yrs[0]}` : `${yrs[0]}–${yrs[yrs.length-1]}`;
+
+        // Road + km range label
+        let label, sublabel;
+        if (b.kind === 'road') {
+          const roadM = lead.location.match(ROAD_RE);
+          const road = roadM ? roadM[1] : '—';
+          const kms = b.evs.map(e => { const m = e.location.match(KM_RE); return m ? parseInt(m[1],10) : null; }).filter(v=>v!=null);
+          let kmLabel = '';
+          if (kms.length) {
+            const lo = Math.min(...kms), hi = Math.max(...kms);
+            kmLabel = lo === hi ? `${lo}k` : `${lo}–${hi}k`;
+          }
+          label = `${road} ${kmLabel}`.trim();
+          sublabel = districts.slice(0, 2).join(' / ');
+        } else {
+          label = lead.location;
+          sublabel = districts[0];
+        }
+
+        // mean coordinate (excluding centroid-suspect dupes)
+        const avgLat = b.evs.reduce((s,e)=>s+e.lat,0) / b.evs.length;
+        const avgLon = b.evs.reduce((s,e)=>s+e.lon,0) / b.evs.length;
+        const isCentroidCluster = b.kind === 'road' &&
+          new Set(b.evs.map(e => `${e.lat.toFixed(5)}_${e.lon.toFixed(5)}`)).size === 1 &&
+          b.events >= 3;
+
+        return {
+          deaths: b.deaths,
+          events: b.events,
+          lat: avgLat, lon: avgLon,
+          label, sublabel,
+          districts,
+          yrRange,
+          isCentroidCluster,
+          kind: b.kind,
+        };
+      })
+      .sort((a, c) => (c.deaths - a.deaths) || (c.events - a.events))
+      .slice(0, topN);
+  }
+
+  function renderHotspots() {
+    const events = filteredOnMap();
+    const tops = computeHotspots(events, 10);
+    const el = document.getElementById('hotspots');
+    if (!tops.length) {
+      el.innerHTML = '<div style="font-size:11px;color:#888;padding:24px 0;font-weight:300">— 篩選條件下無熱點資料 —</div>';
+      return;
+    }
+    el.innerHTML = tops.map((h, i) => {
+      const rankClass = i === 0 ? 'top1' : (i < 3 ? 'top'+(i+1) : '');
+      const segNote = h.isCentroidCluster
+        ? '<span style="margin-left:8px;font-family:var(--font-en);font-size:8.5px;letter-spacing:0.15em;color:var(--gold);text-transform:uppercase">⚑ 路段</span>'
+        : '';
+      return `<div class="hotspot-row ${rankClass}" data-lat="${h.lat}" data-lon="${h.lon}">
+        <div class="rank">${String(i+1).padStart(2,'0')}</div>
+        <div class="info">
+          <div class="loc">${h.label}${segNote}</div>
+          <div class="meta">${h.sublabel}<span class="sep">·</span>${h.events} 件<span class="sep">·</span>${h.yrRange}</div>
+        </div>
+        <div class="deaths">${h.deaths}<small>死亡</small></div>
+      </div>`;
+    }).join('');
+
+    el.querySelectorAll('.hotspot-row').forEach(row => {
+      row.addEventListener('click', () => {
+        const lat = parseFloat(row.dataset.lat);
+        const lon = parseFloat(row.dataset.lon);
+        map.flyTo([lat, lon], 14, { duration: 0.8 });
+        document.getElementById('map').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      });
     });
   }
 
@@ -1588,9 +1822,18 @@ footer .tag.black { background: var(--black); color: var(--white); border-color:
       refresh();
     });
   });
+  document.querySelectorAll('[data-view]').forEach(el => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('[data-view]').forEach(x => x.classList.remove('active'));
+      el.classList.add('active');
+      state.view = el.dataset.view;
+      renderMap();  // only map needs re-render; breakdowns unchanged
+    });
+  });
 
   function refresh() {
     renderMap();
+    renderHotspots();
     renderBreakdowns();
     if (state.selectedId != null) {
       const stillVisible = filteredOnMap().some(e => e._id === state.selectedId);
@@ -1610,6 +1853,7 @@ footer .tag.black { background: var(--black); color: var(--white); border-color:
   renderSnapshot();
   renderHeatmap();
   renderMap();
+  renderHotspots();
   renderBreakdowns();
 
   const bounds = L.latLngBounds(filteredOnMap().map(e => [e.lat, e.lon]));
