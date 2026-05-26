@@ -981,7 +981,7 @@ footer .tag.black { background: var(--black); color: var(--white); border-color:
       <div class="kpi">
         <div class="kpi-label">Motorcycle</div>
         <div class="kpi-zh">機車為主要事故方</div>
-        <div class="kpi-num" id="kMoto">189<small>件</small></div>
+        <div class="kpi-num" id="kMoto">226<small>件</small></div>
       </div>
       <div class="kpi">
         <div class="kpi-label">Pedestrians</div>
@@ -1016,8 +1016,8 @@ footer .tag.black { background: var(--black); color: var(--white); border-color:
 
   <div class="trend-grid">
     <div class="trend-card">
-      <h4>Mode Composition by Year</h4>
-      <div class="card-zh">事故主要當事者運具的年度組成</div>
+      <h4>Victim-Mode Composition by Year</h4>
+      <div class="card-zh">年度受害者運具組成（最弱勢用路人）</div>
       <div class="year-stacks" id="yearStacks"></div>
       <div class="trend-legend">
         <div class="item"><span class="swatch" style="background:#1A1A1A;height:10px"></span>機車</div>
@@ -1067,7 +1067,7 @@ footer .tag.black { background: var(--black); color: var(--white); border-color:
       <span class="cat-pill en" data-year="2025">2025</span>
     </div>
     <div class="filter-group">
-      <span class="filter-group-label">Mode</span>
+      <span class="filter-group-label">Victim</span>
       <span class="cat-pill active" data-mode="all">全部</span>
       <span class="cat-pill" data-mode="機車">機車</span>
       <span class="cat-pill" data-mode="汽車">汽/貨車</span>
@@ -1129,15 +1129,15 @@ footer .tag.black { background: var(--black); color: var(--white); border-color:
   <div class="section-label">04 — Headline Finding 關鍵發現</div>
   <div class="insight">
     <div>
-      <div class="ilabel-en">Motorcycle Share · Decade</div>
-      <div class="ipct" id="motoPct">47<small>%</small></div>
+      <div class="ilabel-en">Motorcycle Victim Share · Decade</div>
+      <div class="ipct" id="motoPct">56<small>%</small></div>
     </div>
     <div>
       <div class="ilabel-en">Key Insight · 整體觀察</div>
       <div class="itext">
-        過去十年間，每年約有 <strong id="avgDeaths2">42</strong> 人在台東縣道路上喪生，
-        其中以<strong>機車</strong>為主要事故方者佔 <strong id="motoCount">189</strong> 件（約 47%）；
-        加上行人與自行車後，<strong>弱勢用路人</strong>佔約一半的事故。<br>
+        過去十年間，每年約有 <strong id="avgDeaths2">42</strong> 人在台東縣道路上喪生。
+        以「事件中最弱勢用路人」為基準：<strong>機車</strong>受害者佔 <strong id="motoCount">226</strong> 件（56%）、
+        行人 53 件（13%）、自行車/慢車 15 件（4%）— 合計<strong>弱勢用路人達 73%</strong>。<br>
         2023 年為十年高峰（52 人），2025 年降至 32 人，是否為趨勢翻轉仍需持續觀察。
         <strong>台東市</strong>累計 148 人，遠高於其他鄉鎮，是優先治理區域。
       </div>
@@ -1158,8 +1158,8 @@ footer .tag.black { background: var(--black); color: var(--white); border-color:
     </div>
 
     <div class="card">
-      <h4>By Mode (Party 1)</h4>
-      <div class="card-zh">事故當事者運具類別</div>
+      <h4>By Victim Mode</h4>
+      <div class="card-zh">受害者運具類別（取事件中最弱勢用路人）</div>
       <div id="byMode"></div>
     </div>
 
@@ -1208,6 +1208,14 @@ footer .tag.black { background: var(--black); color: var(--white); border-color:
       （含天候、光線、道路類別、肇因等）；<strong>2016 與 2017</strong> 完全無經緯度資訊，
       故地圖僅顯示 2018 年後之事件，但所有年份皆納入趨勢與時間／月份分布之統計。
     </p>
+    <p style="font-size:13px;font-weight:300;line-height:1.85;color:var(--grey-1);max-width:780px;margin-top:10px">
+      <strong>「運具類別」採用受害者邏輯</strong>：每筆事件以其中<strong>最弱勢用路人</strong>之運具為類別
+      （優先序：行人 &gt; 自行車/慢車 &gt; 機車 &gt; 汽/貨車）。這與 A1 原始資料的「當事者順位 P1」不同 ——
+      左轉小客車撞死行人之案件，P1 是駕駛、運具為汽車，但本地圖會把該事件歸類為「行人」。
+      此調整反映「誰真正在道路上喪生」之問題，與政策關切的「弱勢用路人保護」一致。
+      原始 P1 分類保留於每筆事件的 <code style="font-family:var(--font-en);font-size:11px;background:var(--grey-4);padding:1px 4px">principal_mode</code> 欄位。
+    </p>
+
     <p style="font-size:11px;color:var(--grey-2);font-weight:300;line-height:1.8;margin-top:14px;font-family:var(--font-en);letter-spacing:0.05em">
       A1 = Fatal crash (death within 24 h). Older years (2016–2017, 2021) use a simplified schema. Coordinates absent for 2016–2017.
     </p>
