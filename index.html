@@ -230,8 +230,14 @@ body {
   margin-bottom: 22px;
   letter-spacing: 0.05em;
 }
+.trend-svg-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: 0 -4px;
+}
 .trend-svg {
   width: 100%;
+  min-width: 560px;
   height: 280px;
   display: block;
 }
@@ -735,15 +741,136 @@ footer .tag.black { background: var(--black); color: var(--white); border-color:
   background: rgba(255,255,255,0.85) !important;
 }
 
+/* ── Responsive ── */
 @media (max-width: 1024px) {
   .map-grid, .cover, .insight, .trend-grid { grid-template-columns: 1fr; }
   #map { height: 480px; }
+  .cover .donut { width: 260px; height: 260px; opacity: 0.35; }
 }
-@media (max-width: 600px) {
-  .shell { padding: 24px 16px 48px; }
-  .cover { padding: 24px; }
-  .cover .big-num { font-size: 88px; }
-  .page-header { flex-wrap: wrap; }
+
+/* Tablet & large mobile */
+@media (max-width: 768px) {
+  .shell { padding: 32px 20px 56px; }
+  .section { margin-bottom: 40px; }
+  .section-label { margin-bottom: 18px; font-size: 9px; letter-spacing: 0.22em; }
+
+  .page-header { flex-wrap: wrap; gap: 14px; margin-bottom: 36px; padding-bottom: 18px; }
+  .page-header .title-block { flex: 1 1 100%; order: 2; }
+  .page-header .logo-mark { order: 1; }
+  .page-header .meta { order: 3; text-align: left; width: 100%; }
+  .page-header .title-zh { font-size: 20px; }
+
+  .cover { padding: 28px; gap: 28px; }
+  .cover .big-num { font-size: 92px; }
+  .cover .donut { width: 200px; height: 200px; right: -50px; top: -30px; opacity: 0.25; }
+  .cover .big-label-zh { font-size: 18px; margin-top: 12px; }
+  .kpi .kpi-num { font-size: 34px; }
+
+  .insight { padding: 24px; gap: 18px; }
+  .insight .ipct { font-size: 72px; }
+  .insight .ipct small { font-size: 18px; }
+  .insight .itext { font-size: 13px; line-height: 1.8; }
+
+  #map { height: 420px; }
+  .map-wrap { padding: 12px; }
+  .side-panel { padding: 22px 20px; }
+
+  .filter-bar { padding: 14px 16px; gap: 12px 16px; }
+  .filter-group { gap: 6px; }
+  .filter-group-label { font-size: 8px; letter-spacing: 0.2em; }
+  .cat-pill { padding: 6px 11px; font-size: 11px; }
+  .cat-pill.en { font-size: 10.5px; }
+
+  .breakdown-grid { grid-template-columns: 1fr; gap: 20px; }
+  .card, .trend-card { padding: 24px 20px; }
+  .card .card-zh, .trend-card .card-zh { font-size: 12.5px; margin-bottom: 18px; }
+  .bar-row { grid-template-columns: 80px 1fr 56px; gap: 10px; }
+
+  .year-stack { grid-template-columns: 44px 1fr 48px; gap: 10px; }
+  .year-stack .yr { font-size: 10.5px; }
+
+  .heatmap-wrap::after {
+    content: 'swipe →';
+    display: block;
+    font-family: var(--font-en);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--grey-3);
+    text-align: right;
+    margin-top: 6px;
+  }
+}
+
+/* Small mobile (iPhone SE etc.) */
+@media (max-width: 480px) {
+  body { line-height: 1.55; }
+  .shell { padding: 22px 14px 48px; }
+  .section { margin-bottom: 32px; }
+
+  .page-header { margin-bottom: 28px; }
+  .page-header .logo-mark { font-size: 8px; padding: 4px 7px; letter-spacing: 0.16em; }
+  .page-header h1 { font-size: 10px; letter-spacing: 0.18em; }
+  .page-header .title-zh { font-size: 18px; margin-top: 2px; }
+  .page-header .meta { font-size: 9px; letter-spacing: 0.18em; }
+
+  .cover { padding: 22px; gap: 20px; grid-template-columns: 1fr; }
+  .cover .big-num { font-size: 72px; }
+  .cover .big-num sup { font-size: 11px; margin-left: 6px; }
+  .cover .big-label-zh { font-size: 16px; letter-spacing: 0.08em; }
+  .cover .big-label-en { font-size: 8.5px; }
+  .cover .span-meta { font-size: 11px; }
+  .cover .donut { width: 150px; height: 150px; right: -40px; top: -20px; opacity: 0.2; }
+  .kpis { grid-template-columns: 1fr 1fr; gap: 12px; }
+  .kpi { padding-top: 10px; }
+  .kpi .kpi-label { font-size: 8.5px; }
+  .kpi .kpi-zh { font-size: 10px; }
+  .kpi .kpi-num { font-size: 28px; }
+  .kpi .kpi-num small { font-size: 11px; }
+
+  .trend-card, .card { padding: 20px 16px; }
+  .trend-svg { min-width: 520px; height: 240px; }
+
+  .insight { padding: 20px; }
+  .insight .ipct { font-size: 56px; }
+  .insight .ipct small { font-size: 14px; }
+  .insight .itext { font-size: 12.5px; line-height: 1.75; }
+  .insight .ilabel-en { font-size: 8.5px; letter-spacing: 0.2em; margin-bottom: 8px; }
+
+  #map { height: 360px; }
+  .map-legend { gap: 12px 14px; font-size: 10px; }
+  .legend-item { font-size: 10px; gap: 6px; }
+  .legend-dot { width: 10px; height: 10px; }
+  .legend-note { display: none; }
+
+  .filter-bar { padding: 12px 14px; gap: 10px 12px; }
+  .filter-group { width: 100%; gap: 6px; }
+  .filter-group-label { width: 100%; }
+  .cat-pill { padding: 6px 10px; font-size: 10.5px; }
+
+  .bar-row { grid-template-columns: 72px 1fr 52px; gap: 8px; font-size: 10.5px; }
+  .bar-row .bar-label { font-size: 10.5px; }
+  .bar-row .bar-val { font-size: 10.5px; }
+
+  .year-stack { grid-template-columns: 38px 1fr 42px; gap: 8px; }
+
+  .heatmap { font-size: 9.5px; }
+  .heatmap .row-label { font-size: 10px; padding: 4px 6px 4px 0; }
+  .heatmap .cell { padding: 5px 0; font-size: 10px; }
+
+  .hour-grid, .month-grid { height: 110px; }
+  .hour-axis span { font-size: 7px; }
+
+  .side-panel { padding: 20px 18px; gap: 18px; }
+  .detail-card .detail-row { grid-template-columns: 72px 1fr; }
+
+  footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    font-size: 8.5px;
+  }
+  footer .tag { font-size: 8.5px; padding: 3px 8px; }
 }
 </style>
 </head>
@@ -812,7 +939,9 @@ footer .tag.black { background: var(--black); color: var(--white); border-color:
   <div class="trend-card" style="margin-bottom:24px">
     <h4>Annual Trend — Events &amp; Deaths</h4>
     <div class="card-zh">2016 – 2025 死亡事故件數與死亡人數年度變化</div>
-    <svg class="trend-svg" id="trendSvg" viewBox="0 0 900 280" preserveAspectRatio="none"></svg>
+    <div class="trend-svg-wrap">
+      <svg class="trend-svg" id="trendSvg" viewBox="0 0 900 280" preserveAspectRatio="xMidYMid meet"></svg>
+    </div>
     <div class="trend-legend">
       <div class="item"><span class="swatch" style="background:#C8D400;height:6px"></span>事故件數 Events</div>
       <div class="item dashed"><span class="swatch"></span>死亡人數 Deaths</div>
