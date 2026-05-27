@@ -1086,6 +1086,11 @@ footer .tag.black { background: var(--black); color: var(--white); border-color:
       <span class="cat-pill active" data-base="roads">道路</span>
       <span class="cat-pill" data-base="satellite">衛星</span>
     </div>
+    <div class="filter-group">
+      <span class="filter-group-label">幹線 Hwys</span>
+      <span class="cat-pill active" data-hwy="on">顯示</span>
+      <span class="cat-pill" data-hwy="off">隱藏</span>
+    </div>
     <div class="filter-group" style="margin-left:auto">
       <span class="filter-group-label" id="filterCount">Showing — / —</span>
     </div>
@@ -1100,6 +1105,9 @@ footer .tag.black { background: var(--black); color: var(--white); border-color:
         <div class="legend-item"><span class="legend-dot" style="background:#D94F3D"></span>行人 Pedestrian</div>
         <div class="legend-item"><span class="legend-dot" style="background:#E8A825"></span>慢車 Bicycle</div>
         <div class="legend-item"><span class="legend-dot" style="background:#888"></span>其他 Other</div>
+        <div class="legend-item" style="margin-left:14px;padding-left:14px;border-left:1px solid var(--grey-3)"><span style="display:inline-block;width:18px;height:3px;background:#D94F3D;margin-right:2px"></span>國道</div>
+        <div class="legend-item"><span style="display:inline-block;width:18px;height:3px;background:#E8A825;margin-right:2px"></span>快速公路</div>
+        <div class="legend-item"><span style="display:inline-block;width:18px;height:2px;background:#3A7CC3;margin-right:2px"></span>省道</div>
         <div class="legend-note">Tap a dot →</div>
       </div>
     </div>
@@ -1221,6 +1229,12 @@ footer .tag.black { background: var(--black); color: var(--white); border-color:
       此調整反映「誰真正在道路上喪生」之問題，與政策關切的「弱勢用路人保護」一致。
       原始 P1 分類保留於每筆事件的 <code style="font-family:var(--font-en);font-size:11px;background:var(--grey-4);padding:1px 4px">principal_mode</code> 欄位。
     </p>
+    <p style="font-size:13px;font-weight:300;line-height:1.85;color:var(--grey-1);max-width:780px;margin-top:10px">
+      <strong>幹線道路圖層</strong>：地圖上的紅／橙／藍線為國道、快速公路、省道，
+      資料來源為<strong>交通部公路局 ROAD_國省道(含快速公路)_1150409 圖資</strong>
+      （TWD97/TM2 經緯度轉換、Douglas-Peucker 15m 簡化）。可在地圖上方「幹線 Hwys」按鈕切換顯示與隱藏。
+    </p>
+
 
     <p style="font-size:11px;color:var(--grey-2);font-weight:300;line-height:1.8;margin-top:14px;font-family:var(--font-en);letter-spacing:0.05em">
       A1 = Fatal crash (death within 24 h). Older years (2016–2017, 2021) use a simplified schema. Coordinates absent for 2016–2017.
@@ -1259,7 +1273,7 @@ footer .tag.black { background: var(--black); color: var(--white); border-color:
   DATA.forEach((e, i) => { e._id = i; });
 
   // ---------- Filter state ----------
-  const state = { year: 'all', mode: 'all', view: 'points', selectedId: null };
+  const state = { year: 'all', mode: 'all', view: 'points', hwy: 'on', selectedId: null };
 
   function filteredAll() {
     return DATA.filter(e =>
@@ -1475,6 +1489,38 @@ footer .tag.black { background: var(--black); color: var(--white); border-color:
 
 const markerLayer = L.layerGroup().addTo(map);
   const markerById = new Map();
+
+  // Highway pane sits between tile labels and markers
+  map.createPane('highwayPane');
+  map.getPane('highwayPane').style.zIndex = 380;
+  map.getPane('highwayPane').style.pointerEvents = 'none';
+
+  const HWY_STYLE = {
+    '國道':   { color: '#D94F3D', weight: 3.2, opacity: 0.85 },
+    '快速公路': { color: '#E8A825', weight: 2.6, opacity: 0.85 },
+    '省道':   { color: '#3A7CC3', weight: 1.6, opacity: 0.75 },
+    '其他':   { color: '#888888', weight: 1.2, opacity: 0.55 },
+  };
+  let highwayLayer = null;
+  function styleHighway(feat) {
+    return HWY_STYLE[feat.properties.class] || HWY_STYLE['其他'];
+  }
+  function bindHwyTooltip(feat, layer) {
+    const p = feat.properties;
+    const label = [p.num, p.name, p.alias].filter(Boolean).join(' · ');
+    if (label) layer.bindTooltip(label, { sticky: true, className: 'taitung-tt' });
+  }
+  fetch('highways.geojson')
+    .then(r => r.ok ? r.json() : Promise.reject(r.status))
+    .then(geo => {
+      highwayLayer = L.geoJSON(geo, {
+        pane: 'highwayPane',
+        style: styleHighway,
+        onEachFeature: bindHwyTooltip,
+      });
+      if (state.hwy === 'on') highwayLayer.addTo(map);
+    })
+    .catch(err => console.warn('highways.geojson not loaded:', err));
 
   // Heat layer — VZT gradient: lime → gold → red. Weight by deaths.
   const heatLayer = L.heatLayer([], {
@@ -1871,6 +1917,19 @@ const markerLayer = L.layerGroup().addTo(map);
       document.querySelectorAll('[data-base]').forEach(x => x.classList.remove('active'));
       el.classList.add('active');
       setBase(el.dataset.base);
+    });
+  });
+  document.querySelectorAll('[data-hwy]').forEach(el => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('[data-hwy]').forEach(x => x.classList.remove('active'));
+      el.classList.add('active');
+      state.hwy = el.dataset.hwy;
+      if (!highwayLayer) return;
+      if (state.hwy === 'on') {
+        if (!map.hasLayer(highwayLayer)) highwayLayer.addTo(map);
+      } else {
+        if (map.hasLayer(highwayLayer)) map.removeLayer(highwayLayer);
+      }
     });
   });
 
