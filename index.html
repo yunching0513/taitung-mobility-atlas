@@ -1080,6 +1080,12 @@ footer .tag.black { background: var(--black); color: var(--white); border-color:
       <span class="cat-pill" data-view="heat">熱力 Heatmap</span>
       <span class="cat-pill" data-view="both">兩者 Both</span>
     </div>
+        <div class="filter-group">
+      <span class="filter-group-label">Base</span>
+      <span class="cat-pill" data-base="minimal">簡潔</span>
+      <span class="cat-pill active" data-base="roads">道路</span>
+      <span class="cat-pill" data-base="satellite">衛星</span>
+    </div>
     <div class="filter-group" style="margin-left:auto">
       <span class="filter-group-label" id="filterCount">Showing — / —</span>
     </div>
@@ -1434,18 +1440,40 @@ footer .tag.black { background: var(--black); color: var(--white); border-color:
     scrollWheelZoom: true,
     attributionControl: true,
   });
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
-    attribution: '&copy; OpenStreetMap &copy; CARTO',
-    subdomains: 'abcd',
-    maxZoom: 19,
-  }).addTo(map);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
-    subdomains: 'abcd',
-    maxZoom: 19,
-    pane: 'shadowPane',
-  }).addTo(map);
+  // --- Base-map registry (switchable) ---
+  const baseLayers = {
+    minimal: [
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap &copy; CARTO', subdomains: 'abcd', maxZoom: 19,
+      }),
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/light_only_labels/{z}/{x}/{y}{r}.png', {
+        subdomains: 'abcd', maxZoom: 19, pane: 'shadowPane',
+      }),
+    ],
+    roads: [
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+        attribution: '&copy; OpenStreetMap &copy; CARTO', subdomains: 'abcd', maxZoom: 19,
+      }),
+    ],
+    satellite: [
+      L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+        attribution: 'Tiles &copy; Esri', maxZoom: 19,
+      }),
+      L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_only_labels/{z}/{x}/{y}{r}.png', {
+        subdomains: 'abcd', maxZoom: 19, pane: 'shadowPane',
+      }),
+    ],
+  };
+  let currentBase = 'roads';
+  function setBase(name) {
+    if (!baseLayers[name]) return;
+    baseLayers[currentBase].forEach(l => map.removeLayer(l));
+    currentBase = name;
+    baseLayers[name].forEach(l => l.addTo(map));
+  }
+  baseLayers.roads.forEach(l => l.addTo(map));
 
-  const markerLayer = L.layerGroup().addTo(map);
+const markerLayer = L.layerGroup().addTo(map);
   const markerById = new Map();
 
   // Heat layer — VZT gradient: lime → gold → red. Weight by deaths.
@@ -1836,6 +1864,13 @@ footer .tag.black { background: var(--black); color: var(--white); border-color:
       el.classList.add('active');
       state.view = el.dataset.view;
       renderMap();  // only map needs re-render; breakdowns unchanged
+    });
+  });
+  document.querySelectorAll('[data-base]').forEach(el => {
+    el.addEventListener('click', () => {
+      document.querySelectorAll('[data-base]').forEach(x => x.classList.remove('active'));
+      el.classList.add('active');
+      setBase(el.dataset.base);
     });
   });
 
